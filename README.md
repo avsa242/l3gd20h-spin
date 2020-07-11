@@ -9,6 +9,13 @@ This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ driver object for the ST 
 
 * I2C connection at up to 400kHz
 * SPI connection at up to 4MHz (P1)
+* Read Gyroscope data (raw, or calculated in millionths of a degree per second)
+* Read flags for data ready or overrun
+* Set operation mode (power down, sleep, normal/active)
+* Set output data rate
+* Set high-pass filter freq for ODR, configure high-pass filter mode
+* Set interrupt mask (int1 & int2), active pin state, output type
+* Enable individual axes
 
 ## Requirements
 

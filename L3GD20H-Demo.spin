@@ -53,97 +53,100 @@ VAR
 PUB Main | dispmode
 
     Setup
-    ser.newline
-    ser.hex(l3gd20h.deviceid, 8)
-{
-    l3gd20h.GyroOpMode(l3gd20h#NORMAL)
-    l3gd20h.GyroDataRate(800)
-    l3gd20h.GyroAxisEnabled(%111)
-    l3gd20h.GyroScale(2000)
+
+    l3gd20h.gyroopmode(l3gd20h#NORMAL)                      ' POWERDOWN (0), SLEEP (1), NORMAL (2)
+    l3gd20h.gyrodatarate(200)                               ' 100, 200, 400, 800
+    l3gd20h.gyroaxisenabled(%111)                           ' Bitmask %zyx (0 = disable, 1 = enable)
+    l3gd20h.gyroscale(245)                                  ' 245, 500, 2000
+
+    dispmode := 0
+    ser.hidecursor
 
     repeat
-        case ser.RxCheck
+        case ser.rxcheck
             "q", "Q":
-                ser.Position(0, 5)
+                ser.showcursor
+                ser.position(0, 5)
                 ser.str(string("Halting"))
-                l3gd20h.Stop
-                time.MSleep(5)
-                ser.Stop
+                l3gd20h.stop
+                time.msleep(5)
+                ser.stop
                 quit
             "r", "R":
-                ser.Position(0, 3)
+                ser.position(0, 3)
                 repeat 2
-                    ser.ClearLine
-                    ser.Newline
+                    ser.clearline(ser#CLR_CUR_TO_END)
+                    ser.newline
                 dispmode ^= 1
 
-
-        ser.Position (0, 3)
+        ser.position (0, 3)
         case dispmode
             0:
-                GyroRaw
-                ser.Newline
-                TempRaw
+                gyroraw
+                ser.newline
+                tempraw
             1:
-                GyroCalc
-                ser.Newline
-                TempRaw
+                gyrocalc
+                ser.newline
+                tempraw
 
-    FlashLED(LED, 100)
+    flashled(LED, 100)
 
 PUB GyroCalc | gx, gy, gz
 
-    repeat until l3gd20h.GyroDataReady
-    l3gd20h.GyroDPS (@gx, @gy, @gz)
-    if l3gd20h.GyroDataOverrun
+    repeat until l3gd20h.gyrodataready
+    l3gd20h.gyrodps (@gx, @gy, @gz)
+    if l3gd20h.gyrodataoverrun
         _overruns++
-    ser.Str (string("Gyro micro-DPS:  "))
-    ser.Str (int.DecPadded (gx, 12))
-    ser.Str (int.DecPadded (gy, 12))
-    ser.Str (int.DecPadded (gz, 12))
-    ser.Newline
-    ser.Str (string("Overruns: "))
-    ser.Dec (_overruns)
+    ser.str (string("Gyro micro-DPS:  "))
+    ser.str (int.decpadded (gx, 12))
+    ser.str (int.decpadded (gy, 12))
+    ser.str (int.decpadded (gz, 12))
+    ser.newline
+    ser.str (string("Overruns: "))
+    ser.dec (_overruns)
 
 PUB GyroRaw | gx, gy, gz
 
-    repeat until l3gd20h.GyroDataReady
-    l3gd20h.GyroData (@gx, @gy, @gz)
-    if l3gd20h.GyroDataOverrun
+    repeat until l3gd20h.gyrodataReady
+    l3gd20h.gyrodata (@gx, @gy, @gz)
+    if l3gd20h.gyrodataoverrun
         _overruns++
-    ser.Str (string("Raw Gyro:  "))
-    ser.Str (int.DecPadded (gx, 7))
-    ser.Str (int.DecPadded (gy, 7))
-    ser.Str (int.DecPadded (gz, 7))
-    ser.Newline
-    ser.Str (string("Overruns: "))
-    ser.Dec (_overruns)
+    ser.str (string("Raw Gyro:  "))
+    ser.str (int.decpadded (gx, 7))
+    ser.str (int.decpadded (gy, 7))
+    ser.str (int.decpadded (gz, 7))
+    ser.newline
+    ser.str (string("Overruns: "))
+    ser.dec (_overruns)
 
 PUB TempRaw
 
-    ser.Str (string("Temperature: "))
-    ser.Str (int.DecPadded (l3gd20h.Temperature, 7))
-}
+    ser.str (string("Temperature: "))
+    ser.str (int.decpadded (l3gd20h.temperature, 7))
+
 PUB Setup
 
     repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, %0000, SER_BAUD)
-    time.MSleep(30)
-    ser.Clear
-    ser.Str (string("Serial terminal started", ser#CR, ser#LF))
+    time.msleep(30)
+    ser.clear
+    ser.str (string("Serial terminal started", ser#CR, ser#LF))
 #ifdef L3GD20H_SPI
     if _l3gd20h_cog := l3gd20h.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
-        ser.Str (string("L3GD20H driver started (SPI)", ser#CR, ser#LF))
+        l3gd20h.defaults
+        ser.str (string("L3GD20H driver started (SPI)", ser#CR, ser#LF))
     else
 #elseifdef L3GD20H_I2C
     if _l3gd20h_cog := l3gd20h.Startx (I2C_SCL, I2C_SDA, I2C_HZ)
-        ser.Str (string("L3GD20H driver started (I2C)", ser#CR, ser#LF))
+        l3gd20h.defaults
+        ser.str (string("L3GD20H driver started (I2C)", ser#CR, ser#LF))
     else
 #endif
-        ser.Str (string("L3GD20H driver failed to start - halting", ser#CR, ser#LF))
-        l3gd20h.Stop
-        time.MSleep (5)
-        ser.Stop
-        FlashLED(LED, 500)
+        ser.str (string("L3GD20H driver failed to start - halting", ser#CR, ser#LF))
+        l3gd20h.stop
+        time.msleep (5)
+        ser.stop
+        flashled(LED, 500)
 
 #include "lib.utility.spin"
 
