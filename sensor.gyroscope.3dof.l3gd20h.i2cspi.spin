@@ -491,6 +491,8 @@ PRI writeReg(reg_nr, nr_bytes, buff_addr) | cmd_packet, tmp
     case reg_nr                                                 'Basic register validation
         $20..$25, $2E, $30, $32..$39:
 #ifdef L3GD20H_SPI
+            spi.write(TRUE, @reg_nr, 1, FALSE)                  ' Ask for reg, but don't deselect after
+            spi.write(TRUE, buff_addr, nr_bytes, TRUE)
 #elseifdef L3GD20H_I2C
             cmd_packet.byte[0] := SLAVE_WR
             cmd_packet.byte[1] := reg_nr

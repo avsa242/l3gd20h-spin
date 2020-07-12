@@ -55,7 +55,7 @@ PUB Main | dispmode
     Setup
 
     l3gd20h.gyroopmode(l3gd20h#NORMAL)                      ' POWERDOWN (0), SLEEP (1), NORMAL (2)
-    l3gd20h.gyrodatarate(200)                               ' 100, 200, 400, 800
+    l3gd20h.gyrodatarate(100)                               ' 100, 200, 400, 800
     l3gd20h.gyroaxisenabled(%111)                           ' Bitmask %zyx (0 = disable, 1 = enable)
     l3gd20h.gyroscale(245)                                  ' 245, 500, 2000
 
