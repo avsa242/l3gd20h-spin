@@ -5,7 +5,7 @@
     Description: Driver for the ST L3GD20H 3DoF gyroscope
     Copyright (c) 2020
     Started Jul 11, 2020
-    Updated Jul 11, 2020
+    Updated Jul 18, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -16,6 +16,14 @@ CON
 
     DEF_HZ              = 100_000
     I2C_MAX_FREQ        = core#I2C_MAX_FREQ
+
+' Indicate to user apps how many Degrees of Freedom each sub-sensor has
+'   (also imply whether or not it has a particular sensor)
+    ACCEL_DOF           = 0
+    GYRO_DOF            = 3
+    MAG_DOF             = 0
+    BARO_DOF            = 0
+    DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
 
 ' High-pass filter modes
     #0, HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES
