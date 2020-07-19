@@ -161,10 +161,13 @@ PUB BlockUpdateEnabled(enabled): tmp
 PUB Calibrate()
 ' Dummy method
 
-PUB CalibrateXLG()
-' Dummy method
+PUB CalibrateGyro()
+
 
 PUB CalibrateMag(samples)
+' Dummy method
+
+PUB CalibrateXLG()
 ' Dummy method
 
 PUB DataByteOrder(lsb_msb_first): tmp
