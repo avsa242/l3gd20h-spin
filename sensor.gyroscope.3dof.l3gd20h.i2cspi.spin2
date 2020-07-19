@@ -5,7 +5,7 @@
     Description: Driver for the ST L3GD20H 3DoF gyroscope
     Copyright (c) 2020
     Started Jul 11, 2020
-    Updated Jul 18, 2020
+    Updated Jul 19, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -236,32 +236,32 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := (tmp.word[1] signx 15) * _gyro_cnts_per_lsb
     long[ptr_z] := (tmp.word[2] signx 15) * _gyro_cnts_per_lsb
 
-PUB GyroOpMode(mode): result | tmp
+PUB GyroOpMode(mode): curr_mode
 ' Set operation mode
 '   Valid values:
 '      *POWERDOWN (0): Power down - lowest power state
 '       SLEEP (1): Sleep - sensor enabled, but X, Y, Z outputs disabled
 '       NORMAL (2): Normal - active operating state
 '   Any other value polls the chip and returns the current setting
-    tmp := $00
-    readReg(core#CTRL1, 1, @tmp)
+    curr_mode := $00
+    readReg(core#CTRL1, 1, @curr_mode)
     case mode
         POWERDOWN:
-            tmp &= core#MASK_PD
+            curr_mode &= core#MASK_PD
         SLEEP:
             mode := (1 << core#FLD_PD)
-            tmp &= core#MASK_XYZEN
+            curr_mode &= core#MASK_XYZEN
         NORMAL:
             mode := (1 << core#FLD_PD)
-            tmp &= core#MASK_PD
+            curr_mode &= core#MASK_PD
         OTHER:
-            result := (tmp >> core#FLD_PD) & %1
-            if tmp & core#BITS_XYZEN
+            result := (curr_mode >> core#FLD_PD) & %1
+            if curr_mode & core#BITS_XYZEN
                 result += 1
             return
 
-    tmp := (tmp | mode)
-    writeReg(core#CTRL1, 1, @tmp)
+    curr_mode := (curr_mode | mode)
+    writeReg(core#CTRL1, 1, @curr_mode)
 
 PUB GyroScale(dps): curr_scale
 ' Set gyro full-scale range, in degrees per second
@@ -272,7 +272,7 @@ PUB GyroScale(dps): curr_scale
     case dps
         245, 500, 2000:
             dps := lookdownz(dps: 245, 500, 2000) << core#FLD_FS
-            _gyro_cnts_per_lsb := lookupz(dps >> core#FLD_FS: 8_750, 17_50, 70_000)
+            _gyro_cnts_per_lsb := lookupz(dps >> core#FLD_FS: 8_750, 17_500, 70_000)
         OTHER:
             curr_scale := (curr_scale >> core#FLD_FS) & core#BITS_FS
             return lookupz(curr_scale: 245, 500, 2000)
@@ -371,7 +371,7 @@ PUB Int1Mask(func_mask): tmp
 ' Set interrupt/function mask for INT1 pin
 '   Valid values:
 '       Bit 10   10
-'           abs(   abs(
+'           ||   ||
 '    Range %00..%11
 '       Bit 1: Interrupt enable (*0: Disable, 1: Enable)
 '       Bit 0: Boot status (*0: Disable, 1: Enable)
@@ -391,7 +391,7 @@ PUB Int2Mask(func_mask): tmp
 ' Set interrupt/function mask for INT2 pin
 '   Valid values:
 '       Bit 3210   3210
-'           abs(abs(   abs(abs(
+'           ||||   ||||
 '    Range %0000..%1111 (default value: %0000)
 '       Bit 3: Data ready
 '       Bit 2: FIFO watermark
