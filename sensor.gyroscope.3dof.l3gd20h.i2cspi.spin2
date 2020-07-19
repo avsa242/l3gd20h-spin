@@ -54,8 +54,7 @@ OBJ
 #else
 #error "One of L3GD20H_I2C or L3GD20H_SPI must be defined"
 #endif
-    core: "core.con.l3gd20h.spin"                       'File containing your device's register set
-    time: "time"                                                'Basic timing functions
+    core: "core.con.l3gd20h.spin"
 
 PUB Null()
 ' This is not a top-level object

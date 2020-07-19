@@ -44,3 +44,4 @@ P2/SPIN2:
 - [x] Port to P2/SPIN2
 - [ ] Support alternate I2C slave address
 - [ ] Support 3-wire SPI
+- [ ] Combine support for L3G4200

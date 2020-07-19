@@ -34,6 +34,7 @@ CON
     SCL_PIN     = 26
     SDO_PIN     = 25
     SDA_PIN     = 27
+    SCK_HZ      = 10_000_000
 ' --
 
 OBJ
@@ -59,9 +60,7 @@ VAR
 
 PUB Main() | dispmode
 
-'    pinl(25)
     Setup()
-
     l3gd20h.gyroopmode(l3gd20h.NORMAL)                      ' POWERDOWN (0), SLEEP (1), NORMAL (2)
     l3gd20h.gyrodatarate(200)                               ' 100, 200, 400, 800
     l3gd20h.gyroaxisenabled(%111)                           ' Bitmask %zyx (0 = disable, 1 = enable)
@@ -139,7 +138,7 @@ PUB Setup()
     ser.clear()
     ser.printf("Serial terminal started\n")
 #ifdef L3GD20H_SPI
-    if _l3gd20h_cog := l3gd20h.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN)
+    if _l3gd20h_cog := l3gd20h.Start (CS_PIN, SCL_PIN, SDA_PIN, SDO_PIN, SCK_HZ)
         l3gd20h.defaults()
         ser.printf("L3GD20H driver started (SPI)\n")
     else
