@@ -42,6 +42,13 @@ CON
 ' Gyro data byte order
     #0, LSBFIRST, MSBFIRST
 
+' Operation modes
+    STANDBY             = 0
+    MEASURE             = 1
+
+    R                   = 0
+    W                   = 1
+
 VAR
 
     long _gyro_cnts_per_lsb
@@ -114,6 +121,30 @@ PUB Defaults
     IntActiveState(INTLVL_LOW)
     IntOutputType(INT_PP)
 
+PUB AccelAxisEnabled(axis_mask)
+' Dummy method
+
+PUB AccelBias(x, y, z, rw)
+' Dummy method
+
+PUB AccelData(x, y, z)
+' Dummy method
+
+PUB AccelDataRate(Hz)
+' Dummy method
+
+PUB AccelDataReady
+' Dummy method
+
+PUB AccelDataOverrun
+' Dummy method
+
+PUB AccelG(x, y, z)
+' Dummy method
+
+PUB AccelScale(scale)
+' Dummy method
+
 PUB BlockUpdateEnabled(enabled): tmp
 ' Enable block updates
 '   Valid values:
@@ -131,6 +162,15 @@ PUB BlockUpdateEnabled(enabled): tmp
     tmp &= core#MASK_BDU
     tmp := (tmp | enabled)
     writeReg(core#CTRL4, 1, @tmp)
+
+PUB Calibrate
+' Dummy method
+
+PUB CalibrateXLG
+' Dummy method
+
+PUB CalibrateMag(samples)
+' Dummy method
 
 PUB DataByteOrder(lsb_msb_first): tmp
 ' Set byte order of gyro data
@@ -190,6 +230,36 @@ PUB GyroAxisEnabled(mask): tmp
     tmp &= core#MASK_XYZEN
     tmp := (tmp | mask) & core#CTRL1_MASK
     writeReg(core#CTRL1, 1, @tmp)
+
+PUB GyroBias(gxBias, gyBias, gzBias, rw)
+' Read or write/manually set Gyroscope calibration offset values
+'   Valid values:
+'       rw:
+'           R (0), W (1)
+'       gxBias, gyBias, gzBias:
+'           -32768..32767
+'   NOTE: When rw is set to READ, gxBias, gyBias and gzBias must be addresses of respective variables to hold the returned calibration offset values.
+    case rw
+        R:
+            long[gxBias] := _gBiasRaw[X_AXIS]
+            long[gyBias] := _gBiasRaw[Y_AXIS]
+            long[gzBias] := _gBiasRaw[Z_AXIS]
+
+        W:
+            case gxBias
+                -32768..32767:
+                    _gBiasRaw[X_AXIS] := gxBias
+                OTHER:
+
+            case gyBias
+                -32768..32767:
+                    _gBiasRaw[Y_AXIS] := gyBias
+                OTHER:
+
+            case gzBias
+                -32768..32767:
+                    _gBiasRaw[Z_AXIS] := gzBias
+                OTHER:
 
 PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data
@@ -428,6 +498,12 @@ PUB IntActiveState(state): tmp
     tmp := (tmp | state)
     writeReg(core#CTRL3, 1, @tmp)
 
+PUB Interrupt
+' Dummy method
+
+PUB IntMask(func_mask)
+' Dummy method
+
 PUB IntOutputType(pp_od): tmp
 ' Set interrupt pin output type
 '   Valid values:
@@ -445,6 +521,27 @@ PUB IntOutputType(pp_od): tmp
     tmp &= core#MASK_PP_OD
     tmp := (tmp | pp_od)
     writeReg(core#CTRL3, 1, @tmp)
+
+PUB MagBias(x, y, z, rw)
+' Dummy method
+
+PUB MagData(x, y, z)
+' Dummy method
+
+PUB MagDataRate(hz)
+' Dummy method
+
+PUB MagDataReady
+' Dummy method
+
+PUB MagGauss(x, y, z)
+' Dummy method
+
+PUB MagScale(scale)
+' Dummy method
+
+PUB OpMode(mode)
+' Dummy method
 
 PUB Temperature: result
 ' Read device temperature
