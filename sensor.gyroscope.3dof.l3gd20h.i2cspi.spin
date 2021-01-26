@@ -97,7 +97,7 @@ PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 #elseifdef L3GD20H_SPI
-PUB Start(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN): status
+PUB Startx(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN): status
 ' Start using custom I/O pins
     if lookdown(CS_PIN: 0..31) and lookdown(SCL_PIN: 0..31) and {
 }   lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31)
@@ -138,6 +138,15 @@ PUB Defaults{}
     intoutputtype(INT_PP)
 }'  but to save code space, just soft-reset, instead:
     reset{}
+
+PUB Preset_Normal{}
+' Like Defaults(), but
+'   * Normal (active) operating mode
+    reset{}
+    gyroopmode(NORMAL)
+    gyroscale(245)                              ' already set at POR, but this
+                                                ' needs to be called to set
+                                                ' scaling value hub var
 
 PUB AccelAxisEnabled(axis_mask)
 ' Dummy method
