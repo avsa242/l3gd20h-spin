@@ -25,15 +25,15 @@ CON
     SER_BAUD    = 115_200
 
 ' I2C
-    I2C_SCL     = 17
-    I2C_SDA     = 19
+    I2C_SCL     = 3
+    I2C_SDA     = 2
     I2C_HZ      = 400_000
 
 ' SPI
-    CS_PIN      = 16
-    SCL_PIN     = 17
-    SDO_PIN     = 18
-    SDA_PIN     = 19
+    CS_PIN      = 0
+    SCL_PIN     = 3
+    SDO_PIN     = 1
+    SDA_PIN     = 2
 ' --
 
 OBJ
