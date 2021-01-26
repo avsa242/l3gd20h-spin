@@ -121,6 +121,7 @@ PUB Stop{}
 
 PUB Defaults{}
 ' Set factory defaults
+{'  This is what _would_ be set:
     blockupdateenabled(FALSE)
     databyteorder(LSBFIRST)
     fifoenabled(FALSE)
@@ -135,6 +136,8 @@ PUB Defaults{}
     int2mask(%0000)
     intactivestate(INTLVL_LOW)
     intoutputtype(INT_PP)
+}'  but to save code space, just soft-reset, instead:
+    reset{}
 
 PUB AccelAxisEnabled(axis_mask)
 ' Dummy method
@@ -629,6 +632,11 @@ PUB MagScale(scale)
 
 PUB OpMode(mode)
 ' Dummy method
+
+PUB Reset{} | tmp
+' Perform soft-reset
+    tmp := (1 << core#SW_RES)
+    writereg(core#LOW_ODR, 1, @tmp)
 
 PUB Temperature{}: temp_adc
 ' Read device temperature
