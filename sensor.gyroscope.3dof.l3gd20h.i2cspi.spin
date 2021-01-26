@@ -79,32 +79,32 @@ PUB Null{}
 ' This is not a top-level object
 
 #ifdef L3GD20H_I2C
-PUB Start{}: okay
+PUB Start{}: status
 ' Start using "standard" Propeller I2C pins and 100kHz
-    okay := startx(DEF_SCL, DEF_SDA, DEF_HZ)
+    status := startx(DEF_SCL, DEF_SDA, DEF_HZ)
 
-PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): okay
+PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 ' Start using custom I/O pins and I2C bus speed
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
 }       I2C_HZ =< core#I2C_MAX_FREQ
-        if okay := i2c.setupx(SCL_PIN, SDA_PIN, I2C_HZ)
+        if status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ)
             time.msleep(1)
             if i2c.present(SLAVE_WR)            ' check device bus presence
                 if deviceid{} == core#DEVID_RESP' validate device
-                    return okay
+                    return status
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 #elseifdef L3GD20H_SPI
-PUB Start(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN): okay
+PUB Start(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN): status
 ' Start using custom I/O pins
     if lookdown(CS_PIN: 0..31) and lookdown(SCL_PIN: 0..31) and {
 }   lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31)
-        if okay := spi.start(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN)
+        if status := spi.start(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN)
             time.msleep(1)
             if deviceid{} == core#DEVID_RESP
-                return okay
+                return status
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
@@ -112,9 +112,9 @@ PUB Start(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN): okay
 #endif
 
 PUB Stop{}
-' Put any other housekeeping code here required/recommended by your device before shutting down
+
 #ifdef L3GD20H_I2C
-    i2c.terminate{}
+    i2c.deinit{}
 #elseifdef L3GD20H_SPI
     spi.stop
 #endif
@@ -397,7 +397,7 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := (~~tmp.word[Y_AXIS] - _gbiasraw[Y_AXIS]) * _gyro_cnts_per_lsb
     long[ptr_z] := (~~tmp.word[Z_AXIS] - _gbiasraw[Z_AXIS]) * _gyro_cnts_per_lsb
 
-PUB GyroOpMode(mode): curr_mode | tmp_xyzen
+PUB GyroOpMode(mode): curr_mode | tmp_xyz
 ' Set operation mode
 '   Valid values:
 '      *POWERDOWN (0): Power down - lowest power state
@@ -656,10 +656,10 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr
     i2c.start{}
-    i2c.wr_block(@cmd_pkt, 2)
+    i2c.wrblock_lsbf(@cmd_pkt, 2)
     i2c.start{}
-    i2c.write(SLAVE_RD)
-    i2c.rd_block(ptr_buff, nr_bytes, TRUE)
+    i2c.wr_byte(SLAVE_RD)
+    i2c.rdblock_lsbf(ptr_buff, nr_bytes, TRUE)
     i2c.stop{}
 #endif
 
@@ -675,9 +675,8 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
             cmd_pkt.byte[0] := SLAVE_WR
             cmd_pkt.byte[1] := reg_nr
             i2c.start{}
-            i2c.wr_block(@cmd_pkt, 2)
-            repeat tmp from 0 to nr_bytes-1
-                i2c.write(byte[ptr_buff][tmp])
+            i2c.wrblock_lsbf(@cmd_pkt, 2)
+            i2c.wrblock_lsbf(ptr_buff, nr_bytes)
             i2c.stop{}
 #endif
         other:

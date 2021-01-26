@@ -10,8 +10,8 @@
     See end of file for terms of use.
     --------------------------------------------
 }
-'#define L3GD20H_I2C
-#define L3GD20H_SPI
+#define L3GD20H_I2C
+'#define L3GD20H_SPI
 
 CON
 
