@@ -72,7 +72,7 @@ OBJ
 #else
 #error "One of L3GD20H_I2C or L3GD20H_SPI must be defined"
 #endif
-    core: "core.con.l3gd20h.spin"
+    core: "core.con.l3gd20h"
     time: "time"
 
 PUB Null{}
