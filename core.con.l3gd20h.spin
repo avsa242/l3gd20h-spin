@@ -19,7 +19,7 @@ CON
 
 ' SPI
     SCK_MAX_FREQ        = 10_000_000
-    CPOL                = 1                                 ' 0 seems to work
+    SPI_MODE            = 3
     MS_SPI              = 1 << 6
     R                   = 1 << 7
 

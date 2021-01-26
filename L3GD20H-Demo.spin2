@@ -30,10 +30,10 @@ CON
     I2C_HZ      = 400_000
 
 ' SPI
-    CS_PIN      = 24
-    SCL_PIN     = 26
-    SDO_PIN     = 25
-    SDA_PIN     = 27
+    CS_PIN      = 0
+    SCL_PIN     = 1
+    SDO_PIN     = 3
+    SDA_PIN     = 2
     SCK_HZ      = 10_000_000
 ' --
 
