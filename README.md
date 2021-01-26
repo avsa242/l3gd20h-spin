@@ -8,7 +8,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the ST L3GD
 ## Salient Features
 
 * I2C connection at up to 400kHz
-* SPI (4-wire) connection at up to 4MHz (P1), 10MHz (P2)
+* SPI (4-wire) connection at up to 4MHz (P1), ~6MHz (P2)
 * Read Gyroscope data (raw, or calculated in millionths of a degree per second)
 * Read flags for data ready or overrun
 * Set operation mode (power down, sleep, normal/active)
@@ -25,12 +25,11 @@ P1/SPIN1:
 
 P2/SPIN2:
 * p2-spin-standard-library
-* I/O pins connected such that SDA is SCL+1 and SDO is SCL-1 (smart-pin SPI driver limitation)
 
 ## Compiler Compatibility
 
 * P1/SPIN1: OpenSpin (tested with 1.00.81)
-* P2/SPIN2: FastSpin (tested with 4.2.5-beta)
+* P2/SPIN2: FastSpin (tested with 5.0.6-beta)
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
