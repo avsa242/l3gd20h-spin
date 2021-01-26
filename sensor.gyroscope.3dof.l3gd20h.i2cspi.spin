@@ -397,7 +397,7 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := (~~tmp.word[Y_AXIS] - _gbiasraw[Y_AXIS]) * _gyro_cnts_per_lsb
     long[ptr_z] := (~~tmp.word[Z_AXIS] - _gbiasraw[Z_AXIS]) * _gyro_cnts_per_lsb
 
-PUB GyroOpMode(mode): curr_mode
+PUB GyroOpMode(mode): curr_mode | tmp_xyzen
 ' Set operation mode
 '   Valid values:
 '      *POWERDOWN (0): Power down - lowest power state
@@ -414,10 +414,16 @@ PUB GyroOpMode(mode): curr_mode
         NORMAL:
             mode := ((curr_mode & core#PD_MASK) | (1 << core#PD))
         other:
+            tmp_xyz := curr_mode & core#XYZEN_BITS
             curr_mode := (curr_mode >> core#PD) & 1
-            if curr_mode & core#XYZEN_BITS  ' XXX REVIEW AND DOC
-                curr_mode += 1
-            return
+            case curr_mode                      ' check state of power mode bit
+                0:                              ' power down
+                    return POWERDOWN
+                1:                              ' normal mode
+                    if tmp_xyz                  ' if any axes are enabled,
+                        return NORMAL           '   chip mode is normal
+                    else
+                        return SLEEP            ' if not, it's sleeping
 
     writereg(core#CTRL1, 1, @mode)
 
@@ -630,21 +636,22 @@ PUB Temperature{}: temp_adc
 
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Read nr_bytes from the slave device into ptr_buff
-    case reg_nr                                             ' Basic register validation
+    case reg_nr                                 ' validate reg #
         $0F, $20..$27, $2E..$39:
-        $28..$2D:                                           ' If reading from gyro data regs,
+        $28..$2D:                               ' If reading from data regs,
 #ifdef L3GD20H_SPI
-            reg_nr |= core#MS_SPI                           '   set multi-byte read mode (SPI)
+            reg_nr |= core#MS_SPI               '   set multi-byte read mode
 #elseifdef L3GD20H_I2C
-            reg_nr |= core#MS_I2C                           '   set multi-byte read mode (I2C)
+            reg_nr |= core#MS_I2C               '   same, for I2C
 #endif
         other:
             return
 
 #ifdef L3GD20H_SPI
     reg_nr |= core#R
-    spi.write(TRUE, @reg_nr, 1, FALSE)                      ' Ask for reg, but don't deselect after
-    spi.read(ptr_buff, nr_bytes, TRUE)                     ' Read in the data
+    ' request read from reg_nr
+    spi.write(TRUE, @reg_nr, 1, FALSE)          ' don't raise CS after
+    spi.read(ptr_buff, nr_bytes, TRUE)          ' now raise it
 #elseifdef L3GD20H_I2C
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr
@@ -658,11 +665,12 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
 ' Write num_bytes to the slave device from the address stored in ptr_buff
-    case reg_nr                                                 'Basic register validation
+    case reg_nr                                 ' validate reg #
         $20..$25, $2E, $30, $32..$39:
 #ifdef L3GD20H_SPI
-            spi.write(TRUE, @reg_nr, 1, FALSE)                  ' Ask for reg, but don't deselect after
-            spi.write(TRUE, ptr_buff, nr_bytes, TRUE)
+            ' request read from reg_nr
+            spi.write(TRUE, @reg_nr, 1, FALSE)  ' don't raise CS after
+            spi.write(TRUE, ptr_buff, nr_bytes, TRUE) ' now raise it
 #elseifdef L3GD20H_I2C
             cmd_pkt.byte[0] := SLAVE_WR
             cmd_pkt.byte[1] := reg_nr
