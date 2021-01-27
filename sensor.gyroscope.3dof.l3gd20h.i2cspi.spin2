@@ -546,7 +546,7 @@ PUB Int1Mask(mask): curr_mask
 ' Set interrupt mask for INT1 pin
 '   Valid values:
 '       Bit 10   10
-'           abs   abs
+'           ||   ||
 '    Range %00..%11
 '       Bit 1: Interrupt enable (*0: Disable, 1: Enable)
 '       Bit 0: Boot status (*0: Disable, 1: Enable)
@@ -565,7 +565,7 @@ PUB Int2Mask(mask): curr_mask
 ' Set interrupt/function mask for INT2 pin
 '   Valid values:
 '       Bit 3210   3210
-'           absabs   absabs
+'           ||||   ||||
 '    Range %0000..%1111 (default value: %0000)
 '       Bit 3: Data ready
 '       Bit 2: FIFO watermark
