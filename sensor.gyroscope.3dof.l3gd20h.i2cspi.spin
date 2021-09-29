@@ -5,7 +5,7 @@
     Description: Driver for the ST L3GD20H 3DoF gyroscope
     Copyright (c) 2021
     Started Jul 11, 2020
-    Updated Apr 29, 2021
+    Updated Sep 29, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -17,6 +17,7 @@ CON
     DEF_SCL             = 28
     DEF_SDA             = 29
     DEF_HZ              = 100_000
+    DEF_ADDR            = 0
     I2C_MAX_FREQ        = core#I2C_MAX_FREQ
 
 ' Indicate to user apps how many Degrees of Freedom each sub-sensor has
@@ -62,6 +63,7 @@ VAR
 
     long _gyro_cnts_per_lsb
     long _gbiasraw[3]
+    byte _addr_bits
 
 OBJ
 
@@ -81,15 +83,16 @@ PUB Null{}
 #ifdef L3GD20H_I2C
 PUB Start{}: status
 ' Start using "standard" Propeller I2C pins and 100kHz
-    status := startx(DEF_SCL, DEF_SDA, DEF_HZ)
+    status := startx(DEF_SCL, DEF_SDA, DEF_HZ, DEF_ADDR)
 
-PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ): status
+PUB Startx(SCL_PIN, SDA_PIN, I2C_HZ, ADDR_BITS): status
 ' Start using custom I/O pins and I2C bus speed
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
-}       I2C_HZ =< core#I2C_MAX_FREQ
+}       I2C_HZ =< core#I2C_MAX_FREQ and lookdown(ADDR_BITS: 0, 1)
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.msleep(1)                      ' wait for device startup
-            if i2c.present(SLAVE_WR)            ' check device bus presence
+            _addr_bits := ADDR_BITS << 1
+            if i2c.present(SLAVE_WR | _addr_bits)' check device bus presence
                 if deviceid{} == core#DEVID_RESP' validate device
                     return status
     ' if this point is reached, something above failed
@@ -652,7 +655,7 @@ PUB Temperature{}: temp_adc
 ' Read device temperature
     readreg(core#OUT_TEMP, 1, @temp_adc)
 
-PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
+PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the slave device into ptr_buff
     case reg_nr                                 ' validate reg #
         $0F, $20..$27, $2E..$39:
@@ -673,17 +676,17 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
     spi.deselectafter(true)
     spi.rdblock_lsbf(ptr_buff, nr_bytes)
 #elseifdef L3GD20H_I2C
-    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[0] := SLAVE_WR | _addr_bits
     cmd_pkt.byte[1] := reg_nr
     i2c.start{}
     i2c.wrblock_lsbf(@cmd_pkt, 2)
     i2c.start{}
-    i2c.wr_byte(SLAVE_RD)
+    i2c.wr_byte(SLAVE_RD | _addr_bits)
     i2c.rdblock_lsbf(ptr_buff, nr_bytes, TRUE)
     i2c.stop{}
 #endif
 
-PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
+PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Write num_bytes to the slave device from the address stored in ptr_buff
     case reg_nr                                 ' validate reg #
         $20..$25, $2E, $30, $32..$39:
@@ -694,7 +697,7 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp
             spi.deselectafter(true)
             spi.wrblock_lsbf(ptr_buff, nr_bytes)
 #elseifdef L3GD20H_I2C
-            cmd_pkt.byte[0] := SLAVE_WR
+            cmd_pkt.byte[0] := SLAVE_WR | _addr_bits
             cmd_pkt.byte[1] := reg_nr
             i2c.start{}
             i2c.wrblock_lsbf(@cmd_pkt, 2)
