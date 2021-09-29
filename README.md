@@ -7,7 +7,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the ST L3GD
 
 ## Salient Features
 
-* I2C connection at up to 400kHz
+* I2C connection at up to 400kHz (default and alternate I2C address)
 * SPI (4-wire) connection at up to 4MHz (P1), ~6MHz (P2)
 * Read Gyroscope data (raw, or calculated in millionths of a degree per second)
 * Read flags for data ready or overrun
@@ -21,15 +21,15 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the ST L3GD
 
 P1/SPIN1:
 * spin-standard-library
-* 1 extra core/cog for the PASM I2C or SPI driver, as applicable
+* 1 extra core/cog for the PASM I2C or SPI engine, as applicable
 
 P2/SPIN2:
 * p2-spin-standard-library
 
 ## Compiler Compatibility
 
-* P1/SPIN1: OpenSpin (tested with 1.00.81)
-* P2/SPIN2: FastSpin (tested with 5.0.6-beta)
+* P1/SPIN1: OpenSpin (tested with 1.00.81), FlexSpin (tested with 6.0.0-beta)
+* P2/SPIN2: FlexSpin (tested with 6.0.0-beta)
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
@@ -41,6 +41,6 @@ P2/SPIN2:
 ## TODO
 
 - [x] Port to P2/SPIN2
-- [ ] Support alternate I2C slave address
+- [x] Support alternate I2C slave address
 - [ ] Support 3-wire SPI
 - [ ] Combine support for L3G4200
