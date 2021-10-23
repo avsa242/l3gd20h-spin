@@ -233,7 +233,7 @@ PUB CalibrateGyro{} | axis, orig_scl, orig_dr, tmpx, tmpy, tmpz, tmp[GYRO_DOF], 
     gyroscale(orig_scl)                         ' restore user's settings
     gyrodatarate(orig_dr)
 
-PUB CalibrateMag(samples)
+PUB CalibrateMag{}
 ' Dummy method
 
 PUB CalibrateXLG{}

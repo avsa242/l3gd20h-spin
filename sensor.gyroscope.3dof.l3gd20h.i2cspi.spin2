@@ -157,16 +157,16 @@ PUB Preset_Normal()
                                                 ' needs to be called to set
                                                 ' scaling value hub var
 
-PUB AccelAxisEnabled(axis_mask)
+PUB AccelAxisEnabled(axis_mask=-2)
 ' Dummy method
 
-PUB AccelBias(x, y, z, rw)
+PUB AccelBias(x, y, z, rw=R)
 ' Dummy method
 
 PUB AccelData(x, y, z)
 ' Dummy method
 
-PUB AccelDataRate(Hz)
+PUB AccelDataRate(Hz=-2)
 ' Dummy method
 
 PUB AccelDataReady()
@@ -178,10 +178,10 @@ PUB AccelDataOverrun
 PUB AccelG(x, y, z)
 ' Dummy method
 
-PUB AccelScale(scale)
+PUB AccelScale(scale=-2)
 ' Dummy method
 
-PUB BlockUpdateEnabled(state): curr_state
+PUB BlockUpdateEnabled(state=-2): curr_state
 ' Enable block updates
 '   Valid values:
 '      *FALSE (0): Update gyro data outputs continuously
@@ -230,14 +230,14 @@ PUB CalibrateGyro() | axis, orig_scl, orig_dr, tmpx, tmpy, tmpz, tmp[GYRO_DOF], 
     gyroscale(orig_scl)                         ' restore user's settings
     gyrodatarate(orig_dr)
 
-PUB CalibrateMag(samples)
+PUB CalibrateMag()
 ' Dummy method
 
 PUB CalibrateXLG()
 
     calibrategyro()
 
-PUB DataByteOrder(order): curr_ord
+PUB DataByteOrder(order=-2): curr_ord
 ' Set byte order of gyro data
 '   Valid values:
 '      *LSBFIRST (0), MSBFIRST (1)
@@ -259,7 +259,7 @@ PUB DeviceID(): id
 ' Read device identification
     readreg(core.WHO_AM_I, 1, @id)
 
-PUB FIFOEnabled(state): curr_state
+PUB FIFOEnabled(state=-2): curr_state
 ' Enable FIFO for gyro data
 '   Valid values:
 '      *FALSE (0): FIFO disabled
@@ -288,7 +288,7 @@ PUB FIFOFull(): flag
     readreg(core.FIFO_SRC, 1, @flag)
     return (((flag >> core.FTH) & 1) == 1)
 
-PUB FIFOMode(mode): curr_mode
+PUB FIFOMode(mode=-2): curr_mode
 ' Set FIFO operation mode
 '   Valid values:
 '      *BYPASS (0)
@@ -309,7 +309,7 @@ PUB FIFOMode(mode): curr_mode
     mode := ((curr_mode & core.FM_MASK) | mode)
     writereg(core.FIFO_CTRL, 1, @mode)
 
-PUB FIFOThreshold(level): curr_lvl
+PUB FIFOThreshold(level=-2): curr_lvl
 ' Set FIFO threshold level
 '   Valid values: 0..31
 '   Any other value polls the chip and returns the current setting
@@ -328,7 +328,7 @@ PUB FIFOUnreadSamples(): nr_samples
     readreg(core.FIFO_SRC, 1, @nr_samples)
     return nr_samples & core.FSS_BITS
 
-PUB GyroAxisEnabled(mask): curr_mask
+PUB GyroAxisEnabled(mask=-2): curr_mask
 ' Enable gyroscope individual axes, by mask
 '   Valid values:
 '       0: Disable axis, 1: Enable axis
@@ -345,7 +345,7 @@ PUB GyroAxisEnabled(mask): curr_mask
     mask := ((curr_mask & core.XYZEN_MASK) | mask)
     writereg(core.CTRL1, 1, @mask)
 
-PUB GyroBias(gxbias, gybias, gzbias, rw)
+PUB GyroBias(gxbias, gybias, gzbias, rw=R)
 ' Read or write/manually set Gyroscope calibration offset values
 '   Valid values:
 '       rw:
@@ -391,7 +391,7 @@ PUB GyroDataOverrun(): flag
     readreg(core.STATUS, 1, @flag)
     flag := (((flag >> core.ZYXOR) & 1) == 1)
 
-PUB GyroDataRate(rate): curr_rate
+PUB GyroDataRate(rate=-2): curr_rate
 ' Set rate of data output, in rate
 '   Valid values: *100, 200, 400, 800
 '   Any other value polls the chip and returns the current setting
@@ -423,7 +423,7 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := (~~tmp.word[Y_AXIS] - _gbiasraw[Y_AXIS]) * _gyro_cnts_per_lsb
     long[ptr_z] := (~~tmp.word[Z_AXIS] - _gbiasraw[Z_AXIS]) * _gyro_cnts_per_lsb
 
-PUB GyroOpMode(mode): curr_mode | tmp_xyz
+PUB GyroOpMode(mode=-2): curr_mode | tmp_xyz
 ' Set operation mode
 '   Valid values:
 '      *POWERDOWN (0): Power down - lowest power state
@@ -453,7 +453,7 @@ PUB GyroOpMode(mode): curr_mode | tmp_xyz
 
     writereg(core.CTRL1, 1, @mode)
 
-PUB GyroScale(scale): curr_scale
+PUB GyroScale(scale=-2): curr_scale
 ' Set gyro full-scale range, in degrees per second
 '   Valid values: *245, 500, 2000
 '   Any other value polls the chip and returns the current setting
@@ -470,7 +470,7 @@ PUB GyroScale(scale): curr_scale
     scale := ((curr_scale & core.FS_MASK) | scale)
     writereg(core.CTRL4, 1, @scale)
 
-PUB HighPassFilterEnabled(state): curr_state
+PUB HighPassFilterEnabled(state=-2): curr_state
 ' Enable high-pass filter for gyro data
 '   Valid values:
 '      *FALSE (0): High-pass filter disabled
@@ -487,7 +487,7 @@ PUB HighPassFilterEnabled(state): curr_state
     state := ((curr_state & core.HPEN_MASK) | state)
     writereg(core.CTRL5, 1, @state)
 
-PUB HighPassFilterFreq(freq): curr_freq
+PUB HighPassFilterFreq(freq=-2): curr_freq
 ' Set high-pass filter frequency, in Hz
 '    Valid values:
 '       If ODR=100Hz: *8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01
@@ -539,7 +539,7 @@ PUB HighPassFilterFreq(freq): curr_freq
     freq := ((curr_freq & core.HPCF_MASK) | freq)
     writereg(core.CTRL2, 1, @freq)
 
-PUB HighPassFilterMode(mode): curr_mode
+PUB HighPassFilterMode(mode=-2): curr_mode
 ' Set data output high pass filter mode
 '   Valid values:
 '      *HPF_NORMAL_RES (0): Normal mode (reset reading HP_RESET_FILTER) XXX - clarify/expand
@@ -558,7 +558,7 @@ PUB HighPassFilterMode(mode): curr_mode
     mode := ((curr_mode & core.HPM_MASK) | mode)
     writereg(core.CTRL2, 1, @mode)
 
-PUB Int1Mask(mask): curr_mask
+PUB Int1Mask(mask=-2): curr_mask
 ' Set interrupt mask for INT1 pin
 '   Valid values:
 '       Bit 10   10
@@ -577,7 +577,7 @@ PUB Int1Mask(mask): curr_mask
     mask := ((curr_mask & core.INT1_MASK) | mask)
     writereg(core.CTRL3, 1, @mask)
 
-PUB Int2Mask(mask): curr_mask
+PUB Int2Mask(mask=-2): curr_mask
 ' Set interrupt/function mask for INT2 pin
 '   Valid values:
 '       Bit 3210   3210
@@ -597,7 +597,7 @@ PUB Int2Mask(mask): curr_mask
     mask := ((curr_mask & core.INT2_MASK) | mask)
     writereg(core.CTRL3, 1, @mask)
 
-PUB IntActiveState(state): curr_state
+PUB IntActiveState(state=-2): curr_state
 ' Set active state for interrupts
 '   Valid values: *INTLVL_LOW (0), INTLVL_HIGH (1)
 '   Any other value polls the chip and returns the current setting
@@ -615,10 +615,10 @@ PUB IntActiveState(state): curr_state
 PUB Interrupt()
 ' Dummy method
 
-PUB IntMask(func_mask)
+PUB IntMask(func_mask=-2)
 ' Dummy method
 
-PUB IntOutputType(type): curr_type
+PUB IntOutputType(type=-2): curr_type
 ' Set interrupt pin output type
 '   Valid values:
 '      *INT_PP (0): Push-pull
@@ -635,13 +635,13 @@ PUB IntOutputType(type): curr_type
     type := ((curr_type & core.PP_OD_MASK) | type)
     writereg(core.CTRL3, 1, @type)
 
-PUB MagBias(x, y, z, rw)
+PUB MagBias(x, y, z, rw=R)
 ' Dummy method
 
 PUB MagData(x, y, z)
 ' Dummy method
 
-PUB MagDataRate(hz)
+PUB MagDataRate(hz=-2)
 ' Dummy method
 
 PUB MagDataReady()
@@ -650,10 +650,10 @@ PUB MagDataReady()
 PUB MagGauss(x, y, z)
 ' Dummy method
 
-PUB MagScale(scale)
+PUB MagScale(scale=-2)
 ' Dummy method
 
-PUB OpMode(mode)
+PUB OpMode(mode=-2)
 ' Dummy method
 
 PUB Reset() | tmp
