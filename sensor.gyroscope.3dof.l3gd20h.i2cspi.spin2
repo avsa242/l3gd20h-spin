@@ -172,7 +172,7 @@ PUB AccelDataRate(Hz=-2)
 PUB AccelDataReady()
 ' Dummy method
 
-PUB AccelDataOverrun
+PUB AccelDataOverrun()
 ' Dummy method
 
 PUB AccelG(x, y, z)
@@ -380,9 +380,9 @@ PUB GyroData(ptr_x, ptr_y, ptr_z) | tmp[2]
     bytefill(@tmp, 0, 8)
     readreg(core.OUT_X_L, 6, @tmp)
 
-    long[ptr_x] := (~~tmp.word[X_AXIS]) - _gbiasraw[X_AXIS]
-    long[ptr_y] := (~~tmp.word[Y_AXIS]) - _gbiasraw[Y_AXIS]
-    long[ptr_z] := (~~tmp.word[Z_AXIS]) - _gbiasraw[Z_AXIS]
+    long[ptr_x] := (tmp.word[X_AXIS] signx 15) - _gbiasraw[X_AXIS]
+    long[ptr_y] := (tmp.word[Y_AXIS] signx 15) - _gbiasraw[Y_AXIS]
+    long[ptr_z] := (tmp.word[Z_AXIS] signx 15) - _gbiasraw[Z_AXIS]
 
 PUB GyroDataOverrun(): flag
 ' Indicates previously acquired data has been overwritten
@@ -419,9 +419,12 @@ PUB GyroDPS(ptr_x, ptr_y, ptr_z) | tmp[2]
 '   Returns: Angular rate in millionths of a degree per second
     bytefill(@tmp, 0, 8)
     readreg(core.OUT_X_L, 6, @tmp)
-    long[ptr_x] := (~~tmp.word[X_AXIS] - _gbiasraw[X_AXIS]) * _gyro_cnts_per_lsb
-    long[ptr_y] := (~~tmp.word[Y_AXIS] - _gbiasraw[Y_AXIS]) * _gyro_cnts_per_lsb
-    long[ptr_z] := (~~tmp.word[Z_AXIS] - _gbiasraw[Z_AXIS]) * _gyro_cnts_per_lsb
+    long[ptr_x] := ((tmp.word[X_AXIS] signx 15) - _gbiasraw[X_AXIS]) {
+}   * _gyro_cnts_per_lsb
+    long[ptr_y] := ((tmp.word[Y_AXIS] signx 15) - _gbiasraw[Y_AXIS]) {
+}   * _gyro_cnts_per_lsb
+    long[ptr_z] := ((tmp.word[Z_AXIS] signx 15) - _gbiasraw[Z_AXIS]) {
+}   * _gyro_cnts_per_lsb
 
 PUB GyroOpMode(mode=-2): curr_mode | tmp_xyz
 ' Set operation mode
