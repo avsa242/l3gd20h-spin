@@ -1,6 +1,6 @@
 # l3gd20h-spin Makefile - requires GNU Make, or compatible
 # Variables below can be overridden on the command line
-#	e.g. IFACE=L3GD20H_SPI3W make
+#      e.g. IFACE=L3GD20H_SPI3W make
 
 # P1, P2 device nodes and baudrates
 #P1DEV=

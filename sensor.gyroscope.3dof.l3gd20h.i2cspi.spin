@@ -5,7 +5,7 @@
     Description: Driver for the ST L3GD20H 3DoF gyroscope
     Copyright (c) 2021
     Started Jul 11, 2020
-    Updated Sep 29, 2021
+    Updated Oct 23, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -27,6 +27,14 @@ CON
     MAG_DOF             = 0
     BARO_DOF            = 0
     DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
+
+' Scales and data rates used during calibration/bias/offset process
+    CAL_XL_SCL          = 0
+    CAL_G_SCL           = 245
+    CAL_M_SCL           = 0
+    CAL_XL_DR           = 0
+    CAL_G_DR            = 100
+    CAL_M_DR            = 0
 
 ' Axis-specific constants
     X_AXIS              = 0
@@ -196,29 +204,34 @@ PUB BlockUpdateEnabled(state): curr_state
 PUB Calibrate{}
 ' Dummy method
 
-PUB CalibrateGyro{} | gbiasrawtmp[3], axis, gx, gy, gz, nr_samples
-' Calibrate the Gyroscope
-' Turn on FIFO and set threshold to 31 samples
-    fifoenabled(true)
-    fifomode(FIFO)
-    fifothreshold(31)                           ' set, confirm setting and use
-    nr_samples := fifothreshold(-2)             ' as number of samples to avg
-    repeat until fifofull{}                     ' wait until FIFO filled
-    longfill(@gbiasrawtmp, 0, 3)                ' initialize temp vars to 0
-    gyrobias(0, 0, 0, W)                        ' Clear out the existing bias;
-                                                '   otherwise it accumulates
+PUB CalibrateGyro{} | axis, orig_scl, orig_dr, tmpx, tmpy, tmpz, tmp[GYRO_DOF], samples
+' Calibrate the gyroscope
+    longfill(@axis, 0, 10)                      ' initialize vars to 0
+    orig_scl := gyroscale(-2)                   ' save user's current settings
+    orig_dr := gyrodatarate(-2)
+    gyrobias(0, 0, 0, W)                        ' clear existing bias
 
-    repeat nr_samples                           ' Read FIFO samples
-        gyrodata(@gx, @gy, @gz)
-        gbiasrawtmp[X_AXIS] += gx               ' Accumulate, for each axis
-        gbiasrawtmp[Y_AXIS] += gy
-        gbiasrawtmp[Z_AXIS] += gz
+    ' set sensor to CAL_G_SCL range, CAL_G_DR Hz data rate
+    gyroscale(CAL_G_SCL)
+    gyrodatarate(CAL_G_DR)
+    samples := CAL_G_DR                         ' samples = DR, for 1 sec time
 
-    ' average the sample data for each axis and update the offsets
-    gyrobias(gbiasrawtmp[X_AXIS]/nr_samples, gbiasrawtmp[Y_AXIS]/nr_samples, {
-}   gbiasrawtmp[Z_AXIS]/nr_samples, W)
-    fifoenabled(false)                          ' Turn the FIFO back off
-    fifomode(BYPASS)
+    ' accumulate and average approx. 1sec worth of samples
+    repeat samples
+        repeat until gyrodataready{}
+        gyrodata(@tmpx, @tmpy, @tmpz)
+        tmp[X_AXIS] += tmpx
+        tmp[Y_AXIS] += tmpy
+        tmp[Z_AXIS] += tmpz
+
+    repeat axis from X_AXIS to Z_AXIS           ' calc avg
+        tmp[axis] /= samples
+
+    ' update offsets
+    gyrobias(tmp[X_AXIS], tmp[Y_AXIS], tmp[Z_AXIS], W)
+
+    gyroscale(orig_scl)                         ' restore user's settings
+    gyrodatarate(orig_dr)
 
 PUB CalibrateMag(samples)
 ' Dummy method
