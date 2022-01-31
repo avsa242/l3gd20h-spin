@@ -175,7 +175,7 @@ PUB AccelDataRate(Hz)
 PUB AccelDataReady{}
 ' Dummy method
 
-PUB AccelDataOverrun
+PUB AccelDataOverrun{}
 ' Dummy method
 
 PUB AccelG(x, y, z)

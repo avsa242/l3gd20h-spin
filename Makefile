@@ -9,12 +9,11 @@ P1BAUD=115200
 P2BAUD=2000000
 
 # P1, P2 compilers
-P1BUILD=openspin
-#P1BUILD=flexspin
-P2BUILD=flexspin
+P1BUILD=flexspin --interp=rom
+P2BUILD=flexspin -2
 
 # L3GD20H interface: I2C, SPI-3wire or SPI-4wire
-#IFACE=L3GD20H_I2C
+IFACE=L3GD20H_I2C
 #IFACE=L3GD20H_SPI3W
 #IFACE=L3GD20H_SPI4W
 
@@ -25,8 +24,8 @@ SPIN2_LIB_PATH=-L ../p2-spin-standard-library/library
 
 
 # -- Internal --
-SPIN1_DRIVER_FN=sensor.gyroscope.3dof.l3gd20h.i2cspi.spin
-SPIN2_DRIVER_FN=sensor.gyroscope.3dof.l3gd20h.i2cspi.spin2
+SPIN1_DRIVER_FN=sensor.gyroscope.3dof.l3gd20h.spin
+SPIN2_DRIVER_FN=sensor.gyroscope.3dof.l3gd20h.spin2
 CORE_FN=core.con.l3gd20h.spin
 # --
 
