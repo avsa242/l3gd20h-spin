@@ -5,7 +5,7 @@
     Description: Driver for the ST L3GD20H 3DoF gyroscope
     Copyright (c) 2022
     Started Jul 11, 2020
-    Updated May 10, 2022
+    Updated May 12, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -182,9 +182,6 @@ PUB AccelDataOverrun{}
 
 PUB AccelScale(scale)
 ' Dummy method
-
-PUB AccelWord2G(accel_word): g
-' dummy method
 
 PUB BlockUpdateEnabled(state): curr_state
 ' Enable block updates
@@ -427,10 +424,6 @@ PUB GyroScale(scale): curr_scale
     scale := ((curr_scale & core#FS_MASK) | scale)
     writereg(core#CTRL4, 1, @scale)
 
-PUB GyroWord2DPS(gyro_word): gyro_dps
-' Convert gyroscope ADC word to degrees per second
-    return (gyro_word * _gres)
-
 PUB HighPassFilterEnabled(state): curr_state
 ' Enable high-pass filter for gyro data
 '   Valid values:
@@ -610,24 +603,6 @@ PUB MagDataReady{}
 
 PUB MagScale(scale)
 ' Dummy method
-
-PUB MagXWord2Gauss(mag_word): mag_gauss
-' dummy method
-
-PUB MagYWord2Gauss(mag_word): mag_gauss
-' dummy method
-
-PUB MagZWord2Gauss(mag_word): mag_gauss
-' dummy method
-
-PUB MagXWord2Tesla(mag_word): mag_tesla
-' dummy method
-
-PUB MagYWord2Tesla(mag_word): mag_tesla
-' dummy method
-
-PUB MagZWord2Tesla(mag_word): mag_tesla
-' dummy method
 
 PUB OpMode(mode)
 ' Dummy method
