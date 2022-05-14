@@ -1,6 +1,6 @@
 {
     --------------------------------------------
-    Filename: sensor.gyroscope.l3gd20h.i2c.spin2
+    Filename: sensor.gyroscope.l3gd20h.spin2
     Author: Jesse Burt
     Description: Driver for the ST L3GD20H 3DoF gyroscope (P2 version)
     Copyright (c) 2022
