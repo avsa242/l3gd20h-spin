@@ -165,7 +165,7 @@ PUB Defaults{}
 }'  but to save code space, just soft-reset, instead:
     reset{}
 
-PUB Preset_Normal{}
+PUB Preset_Active{}
 ' Like Defaults(), but
 '   * Normal (active) operating mode
     reset{}
