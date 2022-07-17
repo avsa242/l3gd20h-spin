@@ -20,8 +20,8 @@ CON
     SER_BAUD    = 2_000_000
 
 ' I2C
-    I2C_SCL     = 9
-    I2C_SDA     = 10
+    I2C_SCL     = 0
+    I2C_SDA     = 1
     I2C_HZ      = 400_000                       ' 400_000 max
     I2C_ADDR    = 0                             ' 0, 1
 
