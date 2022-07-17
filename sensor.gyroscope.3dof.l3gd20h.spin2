@@ -83,7 +83,6 @@ OBJ
     i2c : "com.i2c"                             ' I2C engine
 #endif
     core: "core.con.l3gd20h"
-    time: "time"
 
 PUB Null()
 ' This is not a top-level object
