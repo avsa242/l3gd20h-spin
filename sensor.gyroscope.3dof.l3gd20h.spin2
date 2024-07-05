@@ -1,125 +1,155 @@
 {
-    --------------------------------------------
-    Filename: sensor.gyroscope.l3gd20h.spin2
-    Author: Jesse Burt
-    Description: Driver for the ST L3GD20H 3DoF gyroscope (P2 version)
-    Copyright (c) 2022
-    Started Jul 11, 2020
-    Updated Oct 1, 2022
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       sensor.gyroscope.l3gd20h.spin2
+    Description:    Driver for the ST L3GD20H 3DoF gyroscope
+    Author:         Jesse Burt
+    Started:        Jul 11, 2020
+    Updated:        Jul 5, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+
 #include "sensor.gyroscope.common.spin2h"
 
 CON
 
-    SLAVE_WR            = core.SLAVE_ADDR
-    SLAVE_RD            = core.SLAVE_ADDR|1
+    { default I/O configuration - these can be overridden by the parent object }
+    ' I2C
+    SCL             = 0
+    SDA             = 1
+    I2C_FREQ        = 1_000_000
+    I2C_ADDR        = 0
 
-    DEF_HZ              = 100_000
-    DEF_ADDR            = 0
-    I2C_MAX_FREQ        = core.I2C_MAX_FREQ
+    ' SPI
+    CS              = 0
+    SCK             = 1
+    MOSI            = 2
+    MISO            = 3
+    SPI_FREQ        = 1_000_000
 
-' Indicate to user apps how many Degrees of Freedom each sub-sensor has
-'   (also imply whether or not it has a particular sensor)
-    ACCEL_DOF           = 0
-    GYRO_DOF            = 3
-    MAG_DOF             = 0
-    BARO_DOF            = 0
-    DOF                 = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
+    ' Indicate to user apps how many Degrees of Freedom each sub-sensor has
+    '   (also imply whether or not it has a particular sensor)
+    ACCEL_DOF       = 0
+    GYRO_DOF        = 3
+    MAG_DOF         = 0
+    BARO_DOF        = 0
+    DOF             = ACCEL_DOF + GYRO_DOF + MAG_DOF + BARO_DOF
 
-' Scales and data rates used during calibration/bias/offset process
-    CAL_XL_SCL          = 0
-    CAL_G_SCL           = 245
-    CAL_M_SCL           = 0
-    CAL_XL_DR           = 0
-    CAL_G_DR            = 100
-    CAL_M_DR            = 0
+    ' Scales and data rates used during calibration/bias/offset process
+    CAL_XL_SCL      = 0
+    CAL_G_SCL       = 245
+    CAL_M_SCL       = 0
+    CAL_XL_DR       = 0
+    CAL_G_DR        = 100
+    CAL_M_DR        = 0
 
-' Axis-specific constants
-    X_AXIS              = 0
-    Y_AXIS              = 1
-    Z_AXIS              = 2
-    ALL_AXIS            = 3
+    ' Axis-specific constants
+    X_AXIS          = 0
+    Y_AXIS          = 1
+    Z_AXIS          = 2
+    ALL_AXIS        = 3
 
-' High-pass filter modes
+    ' High-pass filter modes
     #0, HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES
 
-' Operation modes
+    ' Operation modes
     #0, POWERDOWN, SLEEP, NORMAL
 
-' Interrupt pin active states
+    ' Interrupt pin active states
     #0, INTLVL_LOW, INTLVL_HIGH
 
-' Interrupt pin output type
+    ' Interrupt pin output type
     #0, INT_PP, INT_OD
 
-' Gyro data byte order
+    ' Gyro data byte order
     #0, LSBFIRST, MSBFIRST
 
-' Operation modes
-    STANDBY             = 0
-    MEASURE             = 1
+    ' Operation modes
+    STANDBY         = 0
+    MEASURE         = 1
 
-    R                   = 0
-    W                   = 1
 
-' FIFO operation modes
+    ' FIFO operation modes
     #0, BYPASS, FIFO, STREAM, STREAM2FIFO, BYPASS2STREAM, #6, DYN_STREAM, BYPASS2FIFO
+
+
+    SLAVE_WR        = core.SLAVE_ADDR
+    SLAVE_RD        = core.SLAVE_ADDR|1
+
+    DEF_SCL         = 0
+    DEF_SDA         = 1
+    DEF_HZ          = 100_000
+    DEF_ADDR        = 0
+    I2C_MAX_FREQ    = core.I2C_MAX_FREQ
+
 
 VAR
 
     long _CS
     byte _addr_bits
 
+
 OBJ
 
 { SPI? }
 #ifdef L3GD20H_SPI
-{ decide: Bytecode SPI engine, or PASM? Default is PASM if BC isn't specified }
-    spi : "com.spi.10mhz"                     ' bit-banged SPI engine
+    spi:    "com.spi.10mhz"                     ' SPI engine
 #else
 { no, not SPI - default to I2C }
-#define L3GD20H_I2C
-    i2c : "com.i2c"                             ' I2C engine
+#   define L3GD20H_I2C
+        i2c:    "com.i2c"                       ' I2C engine
 #endif
-    core: "core.con.l3gd20h"
+    core:   "core.con.l3gd20h"                  ' HW-specific constants
+
 
 PUB null()
 ' This is not a top-level object
 
+
 #ifdef L3GD20H_I2C
-PUB startx(SCL_PIN, SDA_PIN, I2C_HZ, ADDR_BITS=0): status
-' Start using custom I/O pins and I2C bus speed (defaults to 100kHz)
-    if lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and {
-}       I2C_HZ <= core.I2C_MAX_FREQ and lookdown(ADDR_BITS: 0, 1)
-        if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
+
+PUB start(): status
+' Start using default I/O configuration
+    return startx(SCL, SDA, I2C_FREQ, I2C_ADDR)
+
+
+PUB startx(SCL_PIN, SDA_PIN, I2C_HZ, ADDR_BITS): status
+' Start using custom I/O pins and I2C bus speed
+    if ( lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) )
+        if ( status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ) )
             waitms(1)                           ' wait for device startup
-            _addr_bits := ADDR_BITS << 1
-            if i2c.present(SLAVE_WR | _addr_bits)' check device bus presence
-                if (dev_id() == core.DEVID_RESP)' validate device
+            { promote any non-zero value for ADDR_BITS to '1' }
+            _addr_bits := ( ((ADDR_BITS) ? 1 : 0) ) << 1
+            if ( dev_id() == core.DEVID_RESP )  ' verify communication with device
                     return status
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
+
 #elseifdef L3GD20H_SPI
-PUB startx(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN, SCL_FREQ=1_000_000): status
+
+PUB start(): status
+' Start using default I/O configuration
+    return startx(CS, SCK, MOSI, MISO, SPI_FREQ)
+
+
+PUB startx(CS_PIN, SCL_PIN, MOSI_PIN, MISO_PIN, SPI_HZ=1_000_000): status
 ' Start using custom I/O pins
-    if lookdown(CS_PIN: 0..63) and lookdown(SCL_PIN: 0..63) and {
-}   lookdown(MOSI_PIN: 0..63) and lookdown(MISO_PIN: 0..63)
-        if (status := spi.init(SCL_PIN, MOSI_PIN, MISO_PIN, core.SPI_MODE, {
-}       SCL_FREQ))
+    if (    lookdown(CS_PIN: 0..63) and lookdown(SCL_PIN: 0..63) and ...
+            lookdown(MOSI_PIN: 0..63) and lookdown(MISO_PIN: 0..63) )
+        if ( status := spi.init(SCL_PIN, MOSI_PIN, MISO_PIN, core.SPI_MODE, SPI_HZ) )
             _CS := CS_PIN
             waitms(10)
             pinh(_CS)
-            if (dev_id() == core.DEVID_RESP)
+            if ( dev_id() == core.DEVID_RESP )  ' verify communication with device
                 return status
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 #endif
+
 
 PUB stop()
 ' Stop the driver
@@ -129,6 +159,7 @@ PUB stop()
     spi.deinit()
     _CS := 0
 #endif
+
 
 PUB defaults()
 ' Set factory defaults
@@ -150,6 +181,7 @@ PUB defaults()
 }'  but to save code space, just soft-reset, instead:
     reset()
 
+
 PUB preset_active()
 ' Like Defaults(), but
 '   * Normal (active) operating mode
@@ -158,6 +190,7 @@ PUB preset_active()
     gyro_scale(245)                              ' already set at POR, but this
                                                 ' needs to be called to set
                                                 ' scaling value hub var
+
 
 PUB blk_updt_ena(state=-2): curr_state
 ' Enable block updates
@@ -170,11 +203,11 @@ PUB blk_updt_ena(state=-2): curr_state
     case abs(state)
         0, 1:
             state := (abs(state) & 1) << core.BDU
+            state := ((curr_state & core.BDU_MASK) | state)
+            writereg(core.CTRL4, 1, @state)
         other:
             return (((curr_state >> core.BDU) & 1) == 1)
 
-    state := ((curr_state & core.BDU_MASK) | state)
-    writereg(core.CTRL4, 1, @state)
 
 PUB data_order(order=-2): curr_ord
 ' Set byte order of gyro data
@@ -188,15 +221,16 @@ PUB data_order(order=-2): curr_ord
     case order
         LSBFIRST, MSBFIRST:
             order <<= core.BLE
+            order := ((curr_ord & core.BLE_MASK) | order)
+            writereg(core.CTRL4, 1, @order)
         other:
             return ((curr_ord >> core.BLE) & 1)
 
-    order := ((curr_ord & core.BLE_MASK) | order)
-    writereg(core.CTRL4, 1, @order)
 
 PUB dev_id(): id
 ' Read device identification
     readreg(core.WHO_AM_I, 1, @id)
+
 
 PUB fifo_ena(state=-2): curr_state
 ' Enable FIFO for gyro data
@@ -209,11 +243,11 @@ PUB fifo_ena(state=-2): curr_state
     case abs(state)
         0, 1:
             state := (abs(state) & 1) << core.FIFO_EN
+            state := ((curr_state & core.FIFO_EN_MASK) | state)
+            writereg(core.CTRL5, 1, @state)
         other:
             return (((curr_state >> core.FIFO_EN) & 1) == 1)
 
-    state := ((curr_state & core.FIFO_EN_MASK) | state)
-    writereg(core.CTRL5, 1, @state)
 
 PUB fifo_empty(): flag
 ' Flag indicating FIFO empty
@@ -221,11 +255,13 @@ PUB fifo_empty(): flag
     readreg(core.FIFO_SRC, 1, @flag)
     return (((flag >> core.EMPTY) & 1) == 1)
 
+
 PUB fifo_full(): flag
 ' Flag indicating FIFO threshold reached
 '   Returns: FALSE (0): lower than threshold level, TRUE(-1): at or higher than threshold level
     readreg(core.FIFO_SRC, 1, @flag)
     return (((flag >> core.FTH) & 1) == 1)
+
 
 PUB fifo_mode(mode=-2): curr_mode
 ' Set FIFO operation mode
@@ -242,11 +278,11 @@ PUB fifo_mode(mode=-2): curr_mode
     case mode
         BYPASS, FIFO, STREAM, STREAM2FIFO, BYPASS2STREAM, DYN_STREAM, BYPASS2FIFO:
             mode <<= core.FM
+            mode := ((curr_mode & core.FM_MASK) | mode)
+            writereg(core.FIFO_CTRL, 1, @mode)
         other:
             return ((curr_mode >> core.FM) & core.FM_BITS)
 
-    mode := ((curr_mode & core.FM_MASK) | mode)
-    writereg(core.FIFO_CTRL, 1, @mode)
 
 PUB fifo_thresh(level=-2): curr_lvl
 ' Set FIFO threshold level
@@ -255,17 +291,18 @@ PUB fifo_thresh(level=-2): curr_lvl
     readreg(core.FIFO_CTRL, 1, @curr_lvl)
     case level
         0..31:
+            level := ((curr_lvl & core.FTH_MASK) | level)
+            writereg(core.FIFO_CTRL, 1, @level)
         other:
             return (curr_lvl & core.FTH_BITS)
 
-    level := ((curr_lvl & core.FTH_MASK) | level)
-    writereg(core.FIFO_CTRL, 1, @level)
 
 PUB fifo_nr_unread(): nr_samples
 ' Number of unread samples stored in FIFO
 '   Returns: 0 (empty) .. 32
     readreg(core.FIFO_SRC, 1, @nr_samples)
     return nr_samples & core.FSS_BITS
+
 
 PUB gyro_axis_ena(mask=-2): curr_mask
 ' Enable gyroscope individual axes, by mask
@@ -278,24 +315,26 @@ PUB gyro_axis_ena(mask=-2): curr_mask
     readreg(core.CTRL1, 1, @curr_mask)
     case mask
         %000..%111:
+            mask := ((curr_mask & core.XYZEN_MASK) | mask)
+            writereg(core.CTRL1, 1, @mask)
         other:
             return (curr_mask & core.XYZEN_BITS)
 
-    mask := ((curr_mask & core.XYZEN_MASK) | mask)
-    writereg(core.CTRL1, 1, @mask)
 
-PUB gyro_Bias(x, y, z)
+PUB gyro_bias(x, y, z)
 ' Read gyroscope calibration offset values
 '   x, y, z: pointers to copy offsets to
     long[x] := _gbias[X_AXIS]
     long[y] := _gbias[Y_AXIS]
     long[z] := _gbias[Z_AXIS]
 
+
 PUB gyro_set_bias(x, y, z)
 ' Write gyroscope calibration offset values
 '   Valid values:
 '   -32768..32767
     longmove(@_gbias, @x, 3)
+
 
 PUB gyro_data(ptr_x, ptr_y, ptr_z) | tmp[2]
 ' Read gyroscope data
@@ -306,12 +345,14 @@ PUB gyro_data(ptr_x, ptr_y, ptr_z) | tmp[2]
     long[ptr_y] := (tmp.word[Y_AXIS] signx 15) - _gbias[Y_AXIS]
     long[ptr_z] := (tmp.word[Z_AXIS] signx 15) - _gbias[Z_AXIS]
 
+
 PUB gyro_data_overrun(): flag
 ' Indicates previously acquired data has been overwritten
 '   Returns: TRUE (-1) if data has overrun/been overwritten, FALSE otherwise
     flag := 0
     readreg(core.STATUS, 1, @flag)
     flag := (((flag >> core.ZYXOR) & 1) == 1)
+
 
 PUB gyro_data_rate(rate=-2): curr_rate
 ' Set rate of data output, in rate
@@ -322,12 +363,12 @@ PUB gyro_data_rate(rate=-2): curr_rate
     case rate
         100, 200, 400, 800:
             rate := lookdownz(rate: 100, 200, 400, 800) << core.DR
+            rate := ((curr_rate & core.DR_MASK) | rate)
+            writereg(core.CTRL1, 1, @rate)
         other:
             curr_rate := ((curr_rate >> core.DR) & core.DR_BITS)
             return lookupz(curr_rate: 100, 200, 400, 800)
 
-    rate := ((curr_rate & core.DR_MASK) | rate)
-    writereg(core.CTRL1, 1, @rate)
 
 PUB gyro_data_rdy(): ready
 ' Indicates data is ready
@@ -335,6 +376,7 @@ PUB gyro_data_rdy(): ready
     ready := 0
     readreg(core.STATUS, 1, @ready)
     return (((ready >> core.ZYXDA) & 1) == 1)
+
 
 PUB gyro_opmode(mode=-2): curr_mode | tmp_xyz
 ' Set operation mode
@@ -366,6 +408,7 @@ PUB gyro_opmode(mode=-2): curr_mode | tmp_xyz
 
     writereg(core.CTRL1, 1, @mode)
 
+
 PUB gyro_scale(scale=-2): curr_scale
 ' Set gyro full-scale range, in degrees per second
 '   Valid values: *245, 500, 2000
@@ -376,12 +419,12 @@ PUB gyro_scale(scale=-2): curr_scale
         245, 500, 2000:
             scale := lookdownz(scale: 245, 500, 2000) << core.FS
             _gres := lookupz(scale >> core.FS: 8_750, 17_500, 70_000)
+            scale := ((curr_scale & core.FS_MASK) | scale)
+            writereg(core.CTRL4, 1, @scale)
         other:
             curr_scale := (curr_scale >> core.FS) & core.FS_BITS
             return lookupz(curr_scale: 245, 500, 2000)
 
-    scale := ((curr_scale & core.FS_MASK) | scale)
-    writereg(core.CTRL4, 1, @scale)
 
 PUB gyro_hpf_ena(state=-2): curr_state
 ' Enable high-pass filter for gyro data
@@ -394,11 +437,11 @@ PUB gyro_hpf_ena(state=-2): curr_state
     case abs(state)
         0, 1:
             state := (abs(state) & 1) << core.HPEN
+            state := ((curr_state & core.HPEN_MASK) | state)
+            writereg(core.CTRL5, 1, @state)
         other:
             return (((curr_state >> core.HPEN) & 1) == 1)
 
-    state := ((curr_state & core.HPEN_MASK) | state)
-    writereg(core.CTRL5, 1, @state)
 
 PUB gyro_hpf_freq(freq=-2): curr_freq
 ' Set high-pass filter frequency, in centi-Hz
@@ -413,42 +456,43 @@ PUB gyro_hpf_freq(freq=-2): curr_freq
         100:
             case freq
                 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02, 0_01:
-                    freq := lookdownz(freq: 8_00, 4_00, 2_00, 1_00, 0_50, {
-}                   0_20, 0_10, 0_05, 0_02, 0_01) << core.HPCF
+                    freq := lookdownz(freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, ...
+                                            0_02, 0_01) << core.HPCF
                 other:
                     curr_freq := (curr_freq >> core.HPCF) & core.HPCF_BITS
-                    return lookupz(curr_freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, {
-}                   0_10, 0_05, 0_02, 0_01)
+                    return lookupz(curr_freq: 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, ...
+                                                0_02, 0_01)
         200:
             case freq
                 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05, 0_02:
-                    freq := lookdownz(freq: 15_00, 8_00, 4_00, 2_00, 1_00, {
-}                   0_50, 0_20, 0_10, 0_05, 0_02) << core.HPCF
+                    freq := lookdownz(freq: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, ...
+                                            0_05, 0_02) << core.HPCF
                 other:
                     curr_freq := (curr_freq >> core.HPCF) & core.HPCF_BITS
-                    return lookupz(curr_freq: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, {
-}                   0_20, 0_10, 0_05, 0_02)
+                    return lookupz(curr_freq: 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, ...
+                                                0_05, 0_02)
         400:
             case freq
                 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10, 0_05:
-                    freq := lookdownz(freq: 30_00, 15_00, 8_00, 4_00, 2_00, {
-}                   1_00, 0_50, 0_20, 0_10, 0_05) << core.HPCF
+                    freq := lookdownz(freq: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, ...
+                                            0_10, 0_05) << core.HPCF
                 other:
                     curr_freq := (curr_freq >> core.HPCF) & core.HPCF_BITS
-                    return lookupz(curr_freq: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, {
-}                   0_50, 0_20, 0_10, 0_05)
+                    return lookupz(curr_freq: 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, ...
+                                                0_10, 0_05)
         800:
             case freq
                 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, 0_20, 0_10:
-                    freq := lookdownz(freq: 56_00, 30_00, 15_00, 8_00, 4_00, {
-}                   2_00, 1_00, 0_50, 0_20, 0_10) << core.HPCF
+                    freq := lookdownz(freq: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, 0_50, ...
+                                            0_20, 0_10) << core.HPCF
                 other:
                     curr_freq := (curr_freq >> core.HPCF) & core.HPCF_BITS
-                    return lookupz(curr_freq: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, {
-}                   1_00, 0_50, 0_20, 0_10)
+                    return lookupz(curr_freq: 56_00, 30_00, 15_00, 8_00, 4_00, 2_00, 1_00, ...
+                                                0_50, 0_20, 0_10)
 
     freq := ((curr_freq & core.HPCF_MASK) | freq)
     writereg(core.CTRL2, 1, @freq)
+
 
 PUB gyro_hpf_mode(mode=-2): curr_mode
 ' Set data output high pass filter mode
@@ -463,11 +507,11 @@ PUB gyro_hpf_mode(mode=-2): curr_mode
     case mode
         HPF_NORMAL_RES, HPF_REF, HPF_NORMAL, HPF_AUTO_RES:
             mode <<= core.HPM
+            mode := ((curr_mode & core.HPM_MASK) | mode)
+            writereg(core.CTRL2, 1, @mode)
         other:
             return ((curr_mode >> core.HPM) & core.HPM_BITS)
 
-    mode := ((curr_mode & core.HPM_MASK) | mode)
-    writereg(core.CTRL2, 1, @mode)
 
 PUB int1_mask(mask=-2): curr_mask
 ' Set interrupt mask for INT1 pin
@@ -482,11 +526,11 @@ PUB int1_mask(mask=-2): curr_mask
     case mask
         %00..%11:
             mask <<= core.INT1
+            mask := ((curr_mask & core.INT1_MASK) | mask)
+            writereg(core.CTRL3, 1, @mask)
         other:
             return ((curr_mask >> core.INT1) & core.INT1_BITS)
 
-    mask := ((curr_mask & core.INT1_MASK) | mask)
-    writereg(core.CTRL3, 1, @mask)
 
 PUB int2_mask(mask=-2): curr_mask
 ' Set interrupt/function mask for INT2 pin
@@ -502,11 +546,11 @@ PUB int2_mask(mask=-2): curr_mask
     readreg(core.CTRL3, 1, @curr_mask)
     case mask
         %0000..%1111:
+            mask := ((curr_mask & core.INT2_MASK) | mask)
+            writereg(core.CTRL3, 1, @mask)
         other:
             return (curr_mask & core.INT2_BITS)
 
-    mask := ((curr_mask & core.INT2_MASK) | mask)
-    writereg(core.CTRL3, 1, @mask)
 
 PUB int_polarity(state=-2): curr_state
 ' Set active state for interrupts
@@ -517,11 +561,11 @@ PUB int_polarity(state=-2): curr_state
     case state
         INTLVL_LOW, INTLVL_HIGH:
             state := ((state ^ 1) & 1) << core.H_LACTIVE
+            state := ((curr_state & core.H_LACTIVE_MASK) | state)
+            writereg(core.CTRL3, 1, @state)
         other:
             return (((curr_state >> core.H_LACTIVE) ^ 1) & 1)
 
-    state := ((curr_state & core.H_LACTIVE_MASK) | state)
-    writereg(core.CTRL3, 1, @state)
 
 PUB int_outp_type(type=-2): curr_type
 ' Set interrupt pin output type
@@ -534,20 +578,22 @@ PUB int_outp_type(type=-2): curr_type
     case type
         INT_PP, INT_OD:
             type := type << core.PP_OD
+            type := ((curr_type & core.PP_OD_MASK) | type)
+            writereg(core.CTRL3, 1, @type)
         other:
             return ((curr_type >> core.PP_OD) & 1)
 
-    type := ((curr_type & core.PP_OD_MASK) | type)
-    writereg(core.CTRL3, 1, @type)
 
 PUB reset() | tmp
 ' Perform soft-reset
     tmp := (1 << core.SW_RES)
     writereg(core.LOW_ODR, 1, @tmp)
 
+
 PUB temp_data(): temp_adc
 ' Read device temperature
     readreg(core.OUT_TEMP, 1, @temp_adc)
+
 
 PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the slave device into ptr_buff
@@ -570,7 +616,7 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
     spi.rdblock_lsbf(ptr_buff, nr_bytes)
     pinh(_CS)
 #elseifdef L3GD20H_I2C
-    cmd_pkt.byte[0] := SLAVE_WR | _addr_bits
+    cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
     cmd_pkt.byte[1] := reg_nr
     i2c.start()
     i2c.wrblock_lsbf(@cmd_pkt, 2)
@@ -580,18 +626,18 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
     i2c.stop()
 #endif
 
+
 PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Write num_bytes to the slave device from the address stored in ptr_buff
     case reg_nr                                 ' validate reg #
         $20..$25, $2E, $30, $32..$39:
 #ifdef L3GD20H_SPI
-            ' request read from reg_nr
             pinl(_CS)
             spi.wr_byte(reg_nr)
             spi.wrblock_lsbf(ptr_buff, nr_bytes)
             pinh(_CS)
 #elseifdef L3GD20H_I2C
-            cmd_pkt.byte[0] := SLAVE_WR | _addr_bits
+            cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
             cmd_pkt.byte[1] := reg_nr
             i2c.start()
             i2c.wrblock_lsbf(@cmd_pkt, 2)
@@ -601,9 +647,10 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
         other:
             return
 
+
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
