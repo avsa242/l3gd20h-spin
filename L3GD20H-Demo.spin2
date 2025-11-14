@@ -5,13 +5,13 @@
         * 3DoF data output
     Author:         Jesse Burt
     Started:        Jul 11, 2020
-    Updated:        Jul 5, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Nov 14, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 ' Uncomment one of the pairs of lines below for alternate connectivity options.
 ' The default if nothing is specified, is a PASM-based I2C engine
-' NOTE: If using I2C, and CS should be tied high.
+' NOTE: If using I2C, CS should be tied high.
 
 ' Uncomment the two lines below to use SPI
 '#define L3GD20H_SPI
@@ -19,17 +19,64 @@
 
 CON
 
-    _clkfreq    = cfg._clkfreq_def
-    _xtlfreq    = cfg._xtlfreq
+    _clkfreq    = 180_000_000
+    _xtlfreq    = 20_000_000
 
 
 OBJ
 
-    cfg:    "boardcfg.p2eval"
     ser:    "com.serial.terminal.ansi" | SER_BAUD=2_000_000
-    sensor: "sensor.gyroscope.3dof.l3gd20h" | {I2C} SCL=1, SDA=2, I2C_FREQ=400_000, I2C_ADDR=0,...
-                                            {SPI} CS=0, SCK=1, MOSI=2, MISO=3, SPI_FREQ=1_000_000
+    sensor: "sensor.gyroscope.3dof.l3gd20h" | {I2C} SCL=9, SDA=10, I2C_FREQ=400_000, I2C_ADDR=0,...
+                                            {SPI} CS=8, SCK=9, MOSI=10, MISO=11, SPI_FREQ=1_000_000
     ' NOTE: When using I2C, I2C_ADDR can be 0, or any non-zero value to use the alternate address.
+
+
+PUB main() | a[3], g[3]
+
+    setup()
+    sensor.preset_active()
+
+    repeat
+        repeat
+        until sensor.gyro_data_rdy()             ' wait for new mag data
+
+        ' copy gyroscope data (micro-degrees per second) to an array here
+        sensor.gyro_dps(@g[sensor.X_AXIS], @g[sensor.Y_AXIS], @g[sensor.Z_AXIS])
+
+        ser.pos_xy(0, 3)
+        show_data(@"Gyro (dps):  ", g[sensor.X_AXIS], g[sensor.Y_AXIS], g[sensor.Z_AXIS])
+
+        if ( ser.getchar_noblock() == "c" )     ' press "c" to calibrate/zero the sensors
+            cal_gyro()
+
+
+PUB show_data(p_str, x, y, z) | axis, tmp[3], sign
+
+    longmove(@tmp, @x, 3)
+
+    ser.str(p_str)
+    repeat axis from 0 to 2
+        ' The sign is normally taken from the whole part and just displayed.
+        ' Because we're showing values divided by 1_000_000, it won't show negative until the value
+        '   reaches -1_000_000 or less, so values like -0_800_000 will display without the '-',
+        '   so process the sign display separately here
+        if ( tmp[axis] < 0 )
+            sign := "-"
+        else
+            sign := " "
+        ser.printf(@"%c%d.%06.6d     ", sign, ...
+                                        abs(tmp[axis] / 1_000_000), ...
+                                        abs(tmp[axis] // 1_000_000) )
+    ser.newline()
+
+
+PUB cal_gyro()
+' Calibrate the gyroscope
+    ser.pos_xy(0, 4)
+    ser.str(@"Calibrating gyroscope...")
+    sensor.calibrate_gyro()
+    ser.pos_xy(0, 4)
+    ser.clear_ln()
 
 
 PUB setup()
@@ -45,19 +92,10 @@ PUB setup()
         ser.strln(@"L3GD20H driver failed to start - halting")
         repeat
 
-    sensor.preset_active()
-
-    repeat
-        ser.pos_xy(0, 3)
-        show_gyro_data()
-        if ( ser.getchar_noblock() == "c" )
-            cal_gyro()
-
-#include "gyrodemo.common.spin2h"               ' use code common to all gyro demos
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

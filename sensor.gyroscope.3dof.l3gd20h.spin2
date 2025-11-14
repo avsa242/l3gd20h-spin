@@ -96,8 +96,8 @@ OBJ
     spi:    "com.spi.10mhz"                     ' SPI engine
 #else
 { no, not SPI - default to I2C }
-#   define L3GD20H_I2C
-        i2c:    "com.i2c"                       ' I2C engine
+# define L3GD20H_I2C
+    i2c:    "com.i2c"                           ' I2C engine
 #endif
     core:   "core.con.l3gd20h"                  ' HW-specific constants
 
