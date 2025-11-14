@@ -220,9 +220,9 @@ PUB blk_updt_ena(state=-2): curr_state
 '       TRUE (-1 or 1): Pause further updates until both MSB and LSB of data have been read
 '   Any other value polls the chip and returns the current setting
     curr_state := readreg(core.CTRL4)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := (||(state) & 1) << core.BDU
+            state := (abs(state) & 1) << core.BDU
             state := ((curr_state & core.BDU_MASK) | state)
             writereg(core.CTRL4, state)
         other:
@@ -258,9 +258,9 @@ PUB fifo_ena(state=-2): curr_state
 '       TRUE (-1 or 1): FIFO state
 '   Any other value polls the chip and returns the current setting
     curr_state := readreg(core.CTRL5)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := (||(state) & 1) << core.FIFO_EN
+            state := (abs(state) & 1) << core.FIFO_EN
             state := ((curr_state & core.FIFO_EN_MASK) | state)
             writereg(core.CTRL5, state)
         other:
@@ -445,9 +445,9 @@ PUB gyro_hpf_ena(state=-2): curr_state
 '       TRUE (-1 or 1): High-pass filter state
 '   Any other value polls the chip and returns the current setting
     curr_state := readreg(core.CTRL5)
-    case ||(state)
+    case abs(state)
         0, 1:
-            state := (||(state) & 1) << core.HPEN
+            state := (abs(state) & 1) << core.HPEN
             state := ((curr_state & core.HPEN_MASK) | state)
             writereg(core.CTRL5, state)
         other:
