@@ -4,8 +4,8 @@
     Description:    Driver for the ST L3GD20H 3DoF gyroscope
     Author:         Jesse Burt
     Started:        Jul 11, 2020
-    Updated:        Nov 14, 2025
-    Copyright (c) 2025 - See end of file for terms of use.
+    Updated:        May 29, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -425,12 +425,15 @@ PUB gyro_scale(s=-2): c
 ' Set gyro full-scale range, in degrees per second
 '   Valid values: *245, 500, 2000
 '   Any other value polls the chip and returns the current setting
+'   NOTE: Set and get values are always in degrees per second, despite the availability
+'       of radians per second variant data read method
     c := readreg(core.CTRL4)
     case s
         245, 500, 2000:
-            s := lookdownz(s: 245, 500, 2000) << core.FS
-            _gres := lookupz(s >> core.FS: 8_750, 17_500, 70_000)
-            s := ((c & core.FS_MASK) | s)
+            s := lookdownz(s: 245, 500, 2000)
+            _gres := lookupz(s: 8_750, 17_500, 70_000)
+            _gres_rads_sec := lookupz(s: 0_152, 0_305, 1_220)
+            s := ((c & core.FS_MASK) | (s << core.FS) )
             writereg(core.CTRL4, s)
         other:
             c := (c >> core.FS) & core.FS_BITS
@@ -655,7 +658,7 @@ PRI writereg(reg_nr, val) | cmd_pkt
 
 DAT
 {
-Copyright 2025 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

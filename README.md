@@ -10,7 +10,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the ST L3GD
 
 * I2C connection at up to 400kHz (default and alternate I2C address)
 * SPI (4-wire) connection at up to 4MHz (P1), ~6MHz (P2)
-* Read Gyroscope data (raw, or calculated in millionths of a degree per second)
+* Read Gyroscope data (raw, millionths of a degree per second (integer), degrees per second(float), millionths of a radian per second (integer), radians per second (float) )
 * Read flags for data ready or overrun
 * Set operation mode (power down, sleep, normal/active)
 * Set output data rate
@@ -35,10 +35,10 @@ P2/SPIN2:
 
 | Processor | Language | Compiler               | Backend      | Status                |
 |-----------|----------|------------------------|--------------|-----------------------|
-| P1        | SPIN1    | FlexSpin (7.6.0)       | Bytecode     | OK                    |
-| P1        | SPIN1    | FlexSpin (7.6.0)       | Native/PASM  | OK                    |
-| P2        | SPIN2    | FlexSpin (7.6.0)       | NuCode       | Some runtime issues   |
-| P2        | SPIN2    | FlexSpin (7.6.0)       | Native/PASM2 | OK                    |
+| P1        | SPIN1    | FlexSpin (7.6.5)       | Bytecode     | OK                    |
+| P1        | SPIN1    | FlexSpin (7.6.5)       | Native/PASM  | OK                    |
+| P2        | SPIN2    | FlexSpin (7.6.5)       | NuCode       | Some runtime issues   |
+| P2        | SPIN2    | FlexSpin (7.6.5)       | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
 
